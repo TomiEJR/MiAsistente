@@ -80,6 +80,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ChatMessage.cs" />
+    <Compile Include="Services\ChatOptions.cs" />
     <Compile Include="Services\ChatRequest.cs" />
     <Compile Include="Services\ChatResponse.cs" />
     <Compile Include="Services\GrabadorService.cs" />

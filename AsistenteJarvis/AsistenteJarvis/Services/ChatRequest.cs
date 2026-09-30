@@ -13,5 +13,8 @@ namespace AsistenteJarvis.Services
 
         [JsonProperty("stream")]
         public bool Stream { get; set; }
+
+        [JsonProperty("options")]
+        public ChatOptions Options { get; set; }
     }
 }

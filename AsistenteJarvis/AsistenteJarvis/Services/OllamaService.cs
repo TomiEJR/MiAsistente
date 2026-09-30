@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.IO;
+using System.Diagnostics;
+
 
 namespace AsistenteJarvis.Services
 {
@@ -33,39 +35,43 @@ namespace AsistenteJarvis.Services
 
         public async Task<string> AskAsync(string userInput)
         {
-
             _historial.Add(new ChatMessage { Role = "user", Content = userInput });
+
+            int cantidadASaltear = Math.Max(0, _historial.Count - 4);
+            var historialRecortado = _historial.Skip(cantidadASaltear).ToList();
 
             var request = new ChatRequest
             {
                 Model = "llama3.2:3b",
-                Messages = _historial,
-                Stream = false
+                Messages = historialRecortado,
+                Stream = false,
+                Options = new ChatOptions { NumPredict = 1000 }
             };
-         
+
+            var sw = Stopwatch.StartNew();
             string json = JsonConvert.SerializeObject(request);
-            
-            var contenido = new StringContent(json, Encoding.UTF8, "application/json"); //Pone una etiqueta para que el servidor pueda interpretarlo correctamente como json
+            Console.WriteLine($"[Serializar: {sw.ElapsedMilliseconds} ms] [Tamaño JSON: {json.Length} caracteres]");
 
-            var response = await _http.PostAsync("/api/chat", contenido); //Manda la peticion para la respuesta de ollama
+            var contenido = new StringContent(json, Encoding.UTF8, "application/json");
 
-            string responseBody = await response.Content.ReadAsStringAsync(); //Esta es la respuesta en si, lee "response" como string
+            sw.Restart();
+            var response = await _http.PostAsync("/api/chat", contenido);
+            Console.WriteLine($"[PostAsync (HTTP real): {sw.ElapsedMilliseconds} ms]");
 
-            var chatResponse = JsonConvert.DeserializeObject<ChatResponse>(responseBody);//Convierte "responseBody" a un objeto ChatResponse.cs y asisgna los campos
+            sw.Restart();
+            string responseBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[Leer respuesta: {sw.ElapsedMilliseconds} ms]");
 
-
-           
+            var chatResponse = JsonConvert.DeserializeObject<ChatResponse>(responseBody);
 
             _historial.Add(new ChatMessage { Role = "assistant", Content = chatResponse.Message.Content });
 
+            sw.Restart();
             string loadjson = JsonConvert.SerializeObject(_historial);
             File.WriteAllText("historial.json", loadjson);
-
+            Console.WriteLine($"[Guardar archivo: {sw.ElapsedMilliseconds} ms]");
 
             return chatResponse.Message.Content;
-
-
-
         }
 
     }
