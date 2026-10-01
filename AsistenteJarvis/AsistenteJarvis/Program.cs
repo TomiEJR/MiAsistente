@@ -14,6 +14,7 @@ namespace AsistenteJarvis
             var transcriptor = new TranscriptorService();
             var ollama = new OllamaService();
             var voice = new VoiceService();
+            var piper = new PiperService();
 
             Console.WriteLine("=== JARVIS ===");
             Console.WriteLine("  - 'salir'  termina el programa");
@@ -53,7 +54,7 @@ namespace AsistenteJarvis
                 }
 
                 var swOllama = Stopwatch.StartNew();
-                string respuesta = await ollama.AskAsync(input, frase => voice.NewSpeak(frase));
+                string respuesta = await ollama.AskAsync(input, async frase => await piper.HablarAsync(frase));
                 Console.WriteLine($"[Ollama: {swOllama.ElapsedMilliseconds} ms]");
 
                // Console.WriteLine($"Jarvis: {respuesta}");

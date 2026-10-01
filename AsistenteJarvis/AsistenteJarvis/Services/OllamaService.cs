@@ -7,6 +7,9 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.IO;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
+
 
 
 namespace AsistenteJarvis.Services
@@ -33,22 +36,56 @@ namespace AsistenteJarvis.Services
             {
                 _historial = new List<ChatMessage>();
             }
+
+            bool tieneSystemPrompt = _historial.Any(m => m.Role == "system");
+
+            if (!tieneSystemPrompt)  //Esta es la personalidad del modelo en un prompt
+            {
+                _historial.Insert(0, new ChatMessage
+                {
+                    Role = "system",
+                    Content = "Sos un asistente de voz formal, como un mayordomo. Respondé siempre en español,con respeto, " +
+                               "en un máximo de 2 o 3 oraciones cortas, directo al punto, sin rodeos ni " +
+                               "explicaciones de más. No uses markdown, asteriscos ni listas."
+                });
+            }
         }
 
-       
-        public async Task<string> AskAsync(string userInput, Action<string> onFraseCompleta)
+        public static string QuitarTildes(string texto)
+        {
+            string normalizado = texto.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            foreach (char c in normalizado)
+            {
+                var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (categoria != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString().Normalize(NormalizationForm.FormC);
+        }
+        public async Task<string> AskAsync(string userInput, Func<string, Task> onFraseCompleta)
         {
             _historial.Add(new ChatMessage { Role = "user", Content = userInput });
 
-            int cantidadASaltear = Math.Max(0, _historial.Count - 4);
-            var historialRecortado = _historial.Skip(cantidadASaltear).ToList();
+            var systemMsg = _historial.FirstOrDefault(m => m.Role == "system");
+            var sinSystem = _historial.Where(m => m.Role != "system").ToList();
+
+            int cantidadASaltear = Math.Max(0, sinSystem.Count - 4);
+            var historialRecortado = sinSystem.Skip(cantidadASaltear).ToList();
+
+            if (systemMsg != null)
+                historialRecortado.Insert(0, systemMsg);
 
             var request = new ChatRequest
             {
                 Model = "llama3.2:3b",
                 Messages = historialRecortado,
                 Stream = true,
-                Options = new ChatOptions { NumPredict = 1000 }
+                Options = new ChatOptions { NumPredict = 150 }
             };
 
             var sw = Stopwatch.StartNew();
@@ -87,7 +124,7 @@ namespace AsistenteJarvis.Services
 
                 if (buffer.EndsWith(".") || buffer.EndsWith("?") || buffer.EndsWith("!") || buffer.EndsWith(":"))
                     {
-                    onFraseCompleta(buffer);
+                    await onFraseCompleta(QuitarTildes(buffer));
                     buffer = "";
                    }
 
