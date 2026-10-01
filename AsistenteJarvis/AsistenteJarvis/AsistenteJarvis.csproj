@@ -85,6 +85,7 @@
     <Compile Include="Services\ChatResponse.cs" />
     <Compile Include="Services\GrabadorService.cs" />
     <Compile Include="Services\OllamaService.cs" />
+    <Compile Include="Services\PiperService.cs" />
     <Compile Include="Services\VoiceService.cs" />
     <Compile Include="Services\TranscriptorService.cs" />
   </ItemGroup>
