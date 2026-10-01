@@ -53,11 +53,11 @@ namespace AsistenteJarvis
                 }
 
                 var swOllama = Stopwatch.StartNew();
-                string respuesta = await ollama.AskAsync(input, frase => voice.Speak(frase));
+                string respuesta = await ollama.AskAsync(input, frase => voice.NewSpeak(frase));
                 Console.WriteLine($"[Ollama: {swOllama.ElapsedMilliseconds} ms]");
 
                // Console.WriteLine($"Jarvis: {respuesta}");
-                voice.Speak(respuesta);
+              //  voice.Speak(respuesta);
             }
         }
     }

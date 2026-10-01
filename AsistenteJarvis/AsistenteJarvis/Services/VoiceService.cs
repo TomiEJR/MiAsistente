@@ -45,6 +45,11 @@ namespace AsistenteJarvis.Services
     _synthesizer.SpeakAsync(text);      // Habla el texto nuevo
         }
 
+        public void NewSpeak(string text)
+        {
+            _synthesizer.Speak(text);
+        }
+
 
         public void CancelarHabla()
         {

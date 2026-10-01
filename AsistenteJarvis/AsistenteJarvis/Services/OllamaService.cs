@@ -18,6 +18,7 @@ namespace AsistenteJarvis.Services
 
        
         private List<ChatMessage> _historial;
+
         public OllamaService()
         {
             _http = new HttpClient();
@@ -34,7 +35,8 @@ namespace AsistenteJarvis.Services
             }
         }
 
-        public async Task<string> AskAsync(string userInput)
+       
+        public async Task<string> AskAsync(string userInput, Action<string> onFraseCompleta)
         {
             _historial.Add(new ChatMessage { Role = "user", Content = userInput });
 
@@ -78,9 +80,16 @@ namespace AsistenteJarvis.Services
 
                 Console.Write(chatResponse.Message.Content);
                 if (chatResponse.Done == true) break;
-              //  onFraseCompleta("texto de la oración completa");
+                //  onFraseCompleta("texto de la oración completa");
 
                 textoCompleto.Append(chatResponse.Message.Content);
+                buffer = buffer + chatResponse.Message.Content;
+
+                if (buffer.EndsWith(".") || buffer.EndsWith("?") || buffer.EndsWith("!") || buffer.EndsWith(":"))
+                    {
+                    onFraseCompleta(buffer);
+                    buffer = "";
+                   }
 
 
              
